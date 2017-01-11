@@ -453,6 +453,81 @@ namespace NPoco
         /// Executes the provided sql and parameters
         /// </summary>
         Task<int> ExecuteAsync(Sql sql);
+
+        /// <summary>
+        /// Fetch object of type T1 and T2 with single roundtrip to db
+        /// </summary>
+        /// <typeparam name="T1">Entity type to map to for 1st query</typeparam>
+        /// <typeparam name="T2">Entity type to map to for 2nd query</typeparam>
+        /// <typeparam name="TRet">Return value  from cb param</typeparam>
+        /// <returns></returns>
+        Task<TRet> FetchMultipleAsync<T1, T2, TRet>(Func<List<T1>, List<T2>, TRet> cb, string sql, params object[] args);
+
+        /// <summary>
+        /// Execute 3 queries and map them to 3 different entity types
+        /// i.e. stmt0;stmt1;stmt2
+        /// </summary>
+        Task<TRet> FetchMultipleAsync<T1, T2, T3, TRet>(Func<List<T1>, List<T2>, List<T3>, TRet> cb, string sql, params object[] args);
+
+        /// <summary>
+        /// Execute 4 queries and map them to 4 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1;stmt2;stmt3
+        /// </summary>
+        Task<TRet> FetchMultipleAsync<T1, T2, T3, T4, TRet>(Func<List<T1>, List<T2>, List<T3>, List<T4>, TRet> cb, string sql, params object[] args);
+
+        /// <summary>
+        /// Execute 2 queries and map them to 2 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1
+        /// </summary>
+        Task<TRet> FetchMultipleAsync<T1, T2, TRet>(Func<List<T1>, List<T2>, TRet> cb, Sql sql);
+
+        /// <summary>
+        /// Execute 3 queries and map them to 3 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1
+        /// </summary>
+        Task<TRet> FetchMultipleAsync<T1, T2, T3, TRet>(Func<List<T1>, List<T2>, List<T3>, TRet> cb, Sql sql);
+
+        /// <summary>
+        /// Execute 4 queries and map them to 4 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1;stmt2;stmt3
+        /// </summary>
+        Task<TRet> FetchMultipleAsync<T1, T2, T3, T4, TRet>(Func<List<T1>, List<T2>, List<T3>, List<T4>, TRet> cb, Sql sql);
+
+        /// <summary>
+        /// Execute 2 queries and map them to 2 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1
+        /// </summary>
+        Task<Tuple<List<T1>, List<T2>>> FetchMultipleAsync<T1, T2>(string sql, params object[] args);
+
+        /// <summary>
+        /// Execute 3 queries and map them to 3 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1
+        /// </summary>
+        Task<Tuple<List<T1>, List<T2>, List<T3>>> FetchMultipleAsync<T1, T2, T3>(string sql, params object[] args);
+
+        /// <summary>
+        /// Execute 4 queries and map them to 4 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1;stmt2;stmt3
+        /// </summary>
+        Task<Tuple<List<T1>, List<T2>, List<T3>, List<T4>>> FetchMultipleAsync<T1, T2, T3, T4>(string sql, params object[] args);
+
+        /// <summary>
+        /// Execute 2 queries and map them to 2 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1
+        /// </summary>
+        Task<Tuple<List<T1>, List<T2>>> FetchMultipleAsync<T1, T2>(Sql sql);
+
+        /// <summary>
+        /// Execute 3 queries and map them to 3 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1
+        /// </summary>
+        Task<Tuple<List<T1>, List<T2>, List<T3>>> FetchMultipleAsync<T1, T2, T3>(Sql sql);
+
+        /// <summary>
+        /// Execute 4 queries and map them to 4 different entity types
+        /// in single round trip to db i.e. stmt0;stmt1;stmt2;stmt3
+        /// </summary>
+        Task<Tuple<List<T1>, List<T2>, List<T3>, List<T4>>> FetchMultipleAsync<T1, T2, T3, T4>(Sql sql);
 #endif
     }
 }

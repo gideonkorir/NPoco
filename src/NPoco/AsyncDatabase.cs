@@ -318,6 +318,101 @@ namespace NPoco
             }
         }
 
+        public Task<TRet> FetchMultipleAsync<T1, T2, TRet>(Func<List<T1>, List<T2>, TRet> cb, string sql, params object[] args) { return FetchMultipleAsync<T1, T2, DontMap, DontMap, TRet>(new[] { typeof(T1), typeof(T2) }, cb, new Sql(sql, args)); }
+        public Task<TRet> FetchMultipleAsync<T1, T2, T3, TRet>(Func<List<T1>, List<T2>, List<T3>, TRet> cb, string sql, params object[] args) { return FetchMultipleAsync<T1, T2, T3, DontMap, TRet>(new[] { typeof(T1), typeof(T2), typeof(T3) }, cb, new Sql(sql, args)); }
+        public Task<TRet> FetchMultipleAsync<T1, T2, T3, T4, TRet>(Func<List<T1>, List<T2>, List<T3>, List<T4>, TRet> cb, string sql, params object[] args) { return FetchMultipleAsync<T1, T2, T3, T4, TRet>(new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, cb, new Sql(sql, args)); }
+        public Task<TRet> FetchMultipleAsync<T1, T2, TRet>(Func<List<T1>, List<T2>, TRet> cb, Sql sql) { return FetchMultipleAsync<T1, T2, DontMap, DontMap, TRet>(new[] { typeof(T1), typeof(T2) }, cb, sql); }
+        public Task<TRet> FetchMultipleAsync<T1, T2, T3, TRet>(Func<List<T1>, List<T2>, List<T3>, TRet> cb, Sql sql) { return FetchMultipleAsync<T1, T2, T3, DontMap, TRet>(new[] { typeof(T1), typeof(T2), typeof(T3) }, cb, sql); }
+        public Task<TRet> FetchMultipleAsync<T1, T2, T3, T4, TRet>(Func<List<T1>, List<T2>, List<T3>, List<T4>, TRet> cb, Sql sql) { return FetchMultipleAsync<T1, T2, T3, T4, TRet>(new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, cb, sql); }
+
+        public Task<Tuple<List<T1>, List<T2>>> FetchMultipleAsync<T1, T2>(string sql, params object[] args) { return FetchMultipleAsync<T1, T2, DontMap, DontMap, Tuple<List<T1>, List<T2>>>(new[] { typeof(T1), typeof(T2) }, new Func<List<T1>, List<T2>, Tuple<List<T1>, List<T2>>>((y, z) => new Tuple<List<T1>, List<T2>>(y, z)), new Sql(sql, args)); }
+        public Task<Tuple<List<T1>, List<T2>, List<T3>>> FetchMultipleAsync<T1, T2, T3>(string sql, params object[] args) { return FetchMultipleAsync<T1, T2, T3, DontMap, Tuple<List<T1>, List<T2>, List<T3>>>(new[] { typeof(T1), typeof(T2), typeof(T3) }, new Func<List<T1>, List<T2>, List<T3>, Tuple<List<T1>, List<T2>, List<T3>>>((x, y, z) => new Tuple<List<T1>, List<T2>, List<T3>>(x, y, z)), new Sql(sql, args)); }
+        public Task<Tuple<List<T1>, List<T2>, List<T3>, List<T4>>> FetchMultipleAsync<T1, T2, T3, T4>(string sql, params object[] args) { return FetchMultipleAsync<T1, T2, T3, T4, Tuple<List<T1>, List<T2>, List<T3>, List<T4>>>(new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, new Func<List<T1>, List<T2>, List<T3>, List<T4>, Tuple<List<T1>, List<T2>, List<T3>, List<T4>>>((w, x, y, z) => new Tuple<List<T1>, List<T2>, List<T3>, List<T4>>(w, x, y, z)), new Sql(sql, args)); }
+        public Task<Tuple<List<T1>, List<T2>>> FetchMultipleAsync<T1, T2>(Sql sql) { return FetchMultipleAsync<T1, T2, DontMap, DontMap, Tuple<List<T1>, List<T2>>>(new[] { typeof(T1), typeof(T2) }, new Func<List<T1>, List<T2>, Tuple<List<T1>, List<T2>>>((y, z) => new Tuple<List<T1>, List<T2>>(y, z)), sql); }
+        public Task<Tuple<List<T1>, List<T2>, List<T3>>> FetchMultipleAsync<T1, T2, T3>(Sql sql) { return FetchMultipleAsync<T1, T2, T3, DontMap, Tuple<List<T1>, List<T2>, List<T3>>>(new[] { typeof(T1), typeof(T2), typeof(T3) }, new Func<List<T1>, List<T2>, List<T3>, Tuple<List<T1>, List<T2>, List<T3>>>((x, y, z) => new Tuple<List<T1>, List<T2>, List<T3>>(x, y, z)), sql); }
+        public Task<Tuple<List<T1>, List<T2>, List<T3>, List<T4>>> FetchMultipleAsync<T1, T2, T3, T4>(Sql sql) { return FetchMultipleAsync<T1, T2, T3, T4, Tuple<List<T1>, List<T2>, List<T3>, List<T4>>>(new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, new Func<List<T1>, List<T2>, List<T3>, List<T4>, Tuple<List<T1>, List<T2>, List<T3>, List<T4>>>((w, x, y, z) => new Tuple<List<T1>, List<T2>, List<T3>, List<T4>>(w, x, y, z)), sql); }
+
+        //async impl of multi query
+        private async Task<TRet> FetchMultipleAsync<T1, T2, T3, T4, TRet>(Type[] types, object cb, Sql Sql)
+        {
+            var sql = Sql.SQL;
+            var args = Sql.Arguments;
+
+            try
+            {
+                OpenSharedConnectionInternal();
+                using (var cmd = CreateCommand(_sharedConnection, sql, args))
+                {
+                    var r = await ExecuteReaderHelperAsync(cmd)
+                        .ConfigureAwait(false);
+                    using (r)
+                    {
+                        var typeIndex = 1;
+                        var list1 = new List<T1>();
+                        var list2 = types.Length > 1 ? new List<T2>() : null;
+                        var list3 = types.Length > 2 ? new List<T3>() : null;
+                        var list4 = types.Length > 3 ? new List<T4>() : null;
+                        do
+                        {
+                            if (typeIndex > types.Length)
+                                break;
+
+                            var pd = PocoDataFactory.ForType(types[typeIndex - 1]);
+                            var factory = new MappingFactory(pd, r);
+
+                            while (true)
+                            {
+                                try
+                                {
+                                    if (!(await r.ReadAsync().ConfigureAwait(false)))
+                                        break;
+
+                                    switch (typeIndex)
+                                    {
+                                        case 1:
+                                            list1.Add((T1)factory.Map(r, default(T1)));
+                                            break;
+                                        case 2:
+                                            list2.Add((T2)factory.Map(r, default(T2)));
+                                            break;
+                                        case 3:
+                                            list3.Add((T3)factory.Map(r, default(T3)));
+                                            break;
+                                        case 4:
+                                            list4.Add((T4)factory.Map(r, default(T4)));
+                                            break;
+                                    }
+                                }
+                                catch (Exception x)
+                                {
+                                    OnExceptionInternal(x);
+                                    throw;
+                                }
+                            }
+
+                            typeIndex++;
+                        } while (await r.NextResultAsync().ConfigureAwait(false));
+
+                        switch (types.Length)
+                        {
+                            case 2:
+                                return ((Func<List<T1>, List<T2>, TRet>)cb)(list1, list2);
+                            case 3:
+                                return ((Func<List<T1>, List<T2>, List<T3>, TRet>)cb)(list1, list2, list3);
+                            case 4:
+                                return ((Func<List<T1>, List<T2>, List<T3>, List<T4>, TRet>)cb)(list1, list2, list3, list4);
+                        }
+
+                        return default(TRet);
+                    }
+                }
+            }
+            finally
+            {
+                CloseSharedConnectionInternal();
+            }
+        }
+
         internal async Task<int> ExecuteNonQueryHelperAsync(DbCommand cmd)
         {
             DoPreExecute(cmd);
